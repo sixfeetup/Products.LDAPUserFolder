@@ -409,7 +409,7 @@ function toggleSelect() {
                   </a>
                 </td>
                 <td class="list-item">
-                  <dtml-var expr="_.string.join(si, ', ')">
+                  <dtml-var expr="','.join(si)">
                 </td>
               </tr>
 

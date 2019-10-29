@@ -166,7 +166,7 @@ class LDAPDelegate(Persistent):
         self.read_only = not not read_only
         self.u_base = users_base
 
-        if isinstance(objectclasses, basestring):
+        if isinstance(objectclasses, str):
             objectclasses = [x.strip() for x in objectclasses.split(',')]
         self.u_classes = objectclasses
 
@@ -212,7 +212,8 @@ class LDAPDelegate(Persistent):
                                         op_timeout=server['op_timeout'])
                 return newconn
             except (ldap.SERVER_DOWN, ldap.TIMEOUT,
-                    ldap.INVALID_CREDENTIALS) as e:
+                    ldap.INVALID_CREDENTIALS) as err_msg:
+                e = err_msg
                 continue
 
         # If we get here it means either there are no servers defined or we
@@ -558,8 +559,8 @@ class LDAPDelegate(Persistent):
 
     def _clean_rdn(self, rdn):
         """ Escape all characters that need escaping for a DN, see RFC 2253 """
-        if isinstance(rdn, six.text_type):
-            rdn = rdn.encode('UTF-8')
+        if isinstance(rdn, bytes):
+            rdn = rdn.decode('UTF-8')
 
         if rdn.find('\\') != -1:
             # already escaped, disregard

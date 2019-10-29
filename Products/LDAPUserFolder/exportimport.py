@@ -100,7 +100,7 @@ class LDAPUserFolderXMLAdapter(XMLAdapterBase):
             else:
                 if isinstance(prop_value, str):
                     prop_value = prop_value.decode(self._encoding)
-                elif not isinstance(prop_value, basestring):
+                elif not isinstance(prop_value, str):
                     prop_value = unicode(prop_value)
                 child = self._doc.createTextNode(prop_value)
                 node.appendChild(child)

@@ -34,7 +34,7 @@ from App.special_dtml import DTMLFile
 from BTrees.OOBTree import OOBTree
 from OFS.SimpleItem import SimpleItem as SI
 from OFS.userfolder import BasicUserFolder
-from zope.interface import implements
+from zope.interface import implementer
 
 from .cache import UserCache
 from .cache import getResource
@@ -66,7 +66,7 @@ class LDAPUserFolder(BasicUserFolder):
         returns a Zope user object of type LDAPUser
     """
 
-    implements(ILDAPUserFolder)
+    implementer(ILDAPUserFolder)
 
     security = ClassSecurityInfo()
 
@@ -355,7 +355,7 @@ class LDAPUserFolder(BasicUserFolder):
                             bind_dn=self._binduid, bind_pwd=self._bindpwd,
                             binduid_usage=binduid_usage, read_only=read_only)
 
-        if isinstance(roles, basestring):
+        if isinstance(roles, str):
             roles = [x.strip() for x in roles.split(',')]
         self._roles = roles
 
@@ -368,7 +368,7 @@ class LDAPUserFolder(BasicUserFolder):
 
         self._pwd_encryption = encryption
 
-        if isinstance(obj_classes, basestring):
+        if isinstance(obj_classes, str):
             obj_classes = [x.strip() for x in obj_classes.split(',')]
         self._user_objclasses = obj_classes
 
@@ -615,8 +615,10 @@ class LDAPUserFolder(BasicUserFolder):
             return None
 
         cache_type = pwd and 'authenticated' or 'anonymous'
+        if pwd:
+            pwd = pwd.encode()
         negative_cache_key = '%s:%s:%s' % (name, value,
-                                           sha1(pwd or '').hexdigest())
+                                           sha1(pwd or b'').hexdigest())
         if cache:
             if self._cache('negative').get(negative_cache_key) is not None:
                 return None
@@ -1235,9 +1237,7 @@ class LDAPUserFolder(BasicUserFolder):
     @security.protected(manage_users)
     def getSchemaDict(self):
         """ Retrieve schema as list of dictionaries """
-        all_items = sorted(self.getSchemaConfig().values())
-
-        return tuple(all_items)
+        return tuple(self.getSchemaConfig().values())
 
     @security.protected(EDIT_PERMISSION)
     def setSchemaConfig(self, schema):
@@ -1561,7 +1561,7 @@ class LDAPUserFolder(BasicUserFolder):
         prop_info = schema.get(prop_name, {})
         is_binary = prop_info.get('binary', None)
 
-        if isinstance(prop_value, basestring):
+        if isinstance(prop_value, str):
             if is_binary:
                 prop_value = [prop_value]
             elif not prop_info.get('multivalued', ''):
@@ -1621,7 +1621,7 @@ class LDAPUserFolder(BasicUserFolder):
         for attr, attr_info in schema.items():
             if attr in source:
                 new = source.get(attr, '')
-                if isinstance(new, basestring):
+                if isinstance(new, str):
                     if attr_info.get('binary', ''):
                         new = [new]
                         attr = '%s;binary' % attr
@@ -1692,7 +1692,7 @@ class LDAPUserFolder(BasicUserFolder):
         """ Purge user object from caches """
         user = user or ''
 
-        if not isinstance(user, basestring):
+        if not isinstance(user, str):
             user = user.getUserName()
 
         self._cache('anonymous').invalidate(user)
@@ -1777,7 +1777,7 @@ class LDAPUserFolder(BasicUserFolder):
     def getEncryptedBindPassword(self):
         """ Return a hashed bind password for safe use in forms etc.
         """
-        return sha1(self.getProperty('_bindpwd')).hexdigest()
+        return sha1(self.getProperty('_bindpwd').encode()).hexdigest()
 
 
 def manage_addLDAPUserFolder(self, delegate_type='LDAP delegate',

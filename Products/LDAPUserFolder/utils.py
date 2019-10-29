@@ -16,7 +16,6 @@
 import base64
 import codecs
 from hashlib import md5
-from sets import Set
 
 from AccessControl import AuthEncoding
 
@@ -42,9 +41,9 @@ GROUP_MEMBER_MAP = {'groupOfUniqueNames': 'uniqueMember',
                     'group': 'member',
                     'univentionGroup': 'uniqueMember'}
 
-GROUP_MEMBER_ATTRIBUTES = Set(list(GROUP_MEMBER_MAP.values()))
+GROUP_MEMBER_ATTRIBUTES = set(list(GROUP_MEMBER_MAP.values()))
 
-VALID_GROUP_ATTRIBUTES = Set(['name', 'displayName', 'cn', 'dn',
+VALID_GROUP_ATTRIBUTES = set(['name', 'displayName', 'cn', 'dn',
                               'objectGUID', 'description',
                               'mail']).union(GROUP_MEMBER_ATTRIBUTES)
 encoding = 'latin1'
@@ -55,14 +54,14 @@ encoding = 'latin1'
 #################################################
 
 def _verifyUnicode(st):
-    """ Verify that the string is unicode """
-    if isinstance(st, unicode):
+    """ Verify that the string is str """
+    if isinstance(st, str):
         return st
     else:
         try:
-            return unicode(st)
+            return str(st)
         except UnicodeError:
-            return unicode(st, encoding)
+            return str(st, encoding)
 
 
 def _createLDAPPassword(password, encoding='SHA'):
@@ -92,14 +91,15 @@ try:
         to_utf8 = from_utf8 = str
 
     else:
-
         def from_utf8(s):
-            return encodeLocal(decodeUTF8(s)[0])[0]
+            if isinstance(s, str):
+                return s.encode('utf-8').decode(encoding)
+            return decodeLocal(s)[0]
 
         def to_utf8(s):
             if isinstance(s, str):
-                s = decodeLocal(s)[0]
-            return encodeUTF8(s)[0]
+                return s.encode(encoding).decode('utf-8')
+            return decodeUTF8(s)[0]
 
 except LookupError:
     raise LookupError('Unknown encoding "%s"' % encoding)
